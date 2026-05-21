@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Content Agent System — 4-Agent Pipeline</title>
+  <meta name="description" content="A 4-agent AI content system: scrape competitor reels, find the best reel idea, write in your style, and generate viral hooks.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════ HEADER ═══════ -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🤖</div>
+      <div><h1>Content Agent System</h1><span>4-Agent AI Pipeline</span></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="openSettings()">⚙ Settings</button>
+      <button class="btn btn-primary btn-lg" id="btnRunAll" onclick="runFullPipeline()">
+        ▶ Run Full Pipeline
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ═══════ PIPELINE BAR ═══════ -->
+    <div class="pipeline-bar" id="pipelineBar">
+      <div class="pipeline-step" id="step-scraper" onclick="switchTab('scraper')">
+        <div class="step-icon" id="icon-scraper">01</div>
+        <div><div class="step-label">Competitor Data</div><div class="step-sub">Reel metrics</div></div>
+      </div>
+      <div class="pipeline-arrow" id="arrow-1"></div>
+      <div class="pipeline-step" id="step-validator" onclick="switchTab('validator')">
+        <div class="step-icon" id="icon-validator">02</div>
+        <div><div class="step-label">Best Reel</div><div class="step-sub">Pick winner</div></div>
+      </div>
+      <div class="pipeline-arrow" id="arrow-2"></div>
+      <div class="pipeline-step" id="step-writer" onclick="switchTab('writer')">
+        <div class="step-icon" id="icon-writer">03</div>
+        <div><div class="step-label">Style Writer</div><div class="step-sub">Your voice</div></div>
+      </div>
+      <div class="pipeline-arrow" id="arrow-3"></div>
+      <div class="pipeline-step" id="step-hooks" onclick="switchTab('hooks')">
+        <div class="step-icon" id="icon-hooks">04</div>
+        <div><div class="step-label">Viral Hooks</div><div class="step-sub">Best hook</div></div>
+      </div>
+    </div>
+
+    <!-- ═══════ TOPIC INPUT ═══════ -->
+    <div class="card" style="margin-bottom:24px;display:flex;align-items:center;gap:16px;padding:16px 24px;">
+      <label style="font-size:13px;font-weight:600;white-space:nowrap;">Today's Topic:</label>
+      <input type="text" id="topicInput" placeholder="e.g. Claude Code + N8N automation setup" style="flex:1;margin:0;">
+      <button class="btn btn-primary" onclick="runFullPipeline()">▶ Run All</button>
+    </div>
+
+    <!-- ═══════ STATS ROW ═══════ -->
+    <div class="grid grid-4 section" id="statsRow">
+      <div class="card stat-card"><div class="stat-value" id="statPosts">—</div><div class="stat-label">Posts Scraped</div></div>
+      <div class="card stat-card"><div class="stat-value" id="statFiltered">—</div><div class="stat-label">After Filter</div></div>
+      <div class="card stat-card"><div class="stat-value" id="statTopics">—</div><div class="stat-label">Topic Clusters</div></div>
+      <div class="card stat-card"><div class="stat-value" id="statViral">—</div><div class="stat-label">Viral Signals</div></div>
+    </div>
+
+    <!-- ═══════ TAB NAVIGATION ═══════ -->
+    <div class="tabs">
+      <button class="tab active" data-tab="scraper" onclick="switchTab('scraper')">📡 Agent 1 Data</button>
+      <button class="tab" data-tab="validator" onclick="switchTab('validator')">✅ Agent 2 Best Reel</button>
+      <button class="tab" data-tab="writer" onclick="switchTab('writer')">✍ Agent 3 Script</button>
+      <button class="tab" data-tab="hooks" onclick="switchTab('hooks')">🪝 Agent 4 Hooks</button>
+      <button class="tab" data-tab="console" onclick="switchTab('console')">💻 Console</button>
+    </div>
+
+    <!-- ═══════ TAB: SCRAPER ═══════ -->
+    <div class="tab-content active" id="tab-scraper">
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎯 Competitor Reel Scraper</div><span class="card-badge badge-purple">Agent 01</span></div>
+          <div class="input-group"><label>Platforms</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="platIG" checked> Instagram</label>
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="platYT" checked> YouTube</label>
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="platTW" checked> Twitter/X</label>
+            </div>
+          </div>
+          <div class="input-group"><label>Keywords (comma-separated)</label>
+            <input type="text" id="keywordsInput" placeholder="Claude Code, AI agents, N8N automation"></div>
+          <div class="input-group"><label>Competitor Handles</label>
+            <input type="text" id="competitorsInput" placeholder="@handle1, @handle2"></div>
+          <div class="input-group"><label>Days Back</label>
+            <input type="number" id="daysBack" value="7" min="1" max="30"></div>
+          <button class="btn btn-primary" onclick="runScraper()">▶ Scrape Competitors</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📊 Competitor Data Status</div></div>
+          <div id="scraperStatus">
+            <div class="empty-state"><div class="icon">📡</div><p>Scrape competitor reels to collect comments, likes, views, shares, and engagement.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">▶ YouTube Competitor Reels</div></div>
+          <div class="table-wrap" id="youtubeTable">
+            <div class="empty-state"><div class="icon">📭</div><p>No live YouTube rows yet.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📷 Instagram Competitor Reels</div></div>
+          <div class="table-wrap" id="instagramTable">
+            <div class="empty-state"><div class="icon">📭</div><p>No live Instagram rows yet.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 All Competitor Reel Data</div><span id="postCount" class="card-badge badge-blue">0 posts</span></div>
+        <div class="table-wrap" id="scraperTable">
+          <div class="empty-state"><div class="icon">📭</div><p>No posts yet. Run the scraper to populate this table.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ TAB: VALIDATOR ═══════ -->
+    <div class="tab-content" id="tab-validator">
+      <div id="validatorRec"></div>
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏆 Best Reel Ideas</div><span class="card-badge badge-green">Agent 02</span></div>
+          <div id="topTopics"><div class="empty-state"><div class="icon">📊</div><p>Run Agent 2 after scraping to find your best reel idea.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📂 Topic Clusters</div></div>
+          <div id="topicClusters"><div class="empty-state"><div class="icon">🗂</div><p>Clusters will appear after validation.</p></div></div>
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎬 Top Formats</div></div>
+          <div id="topFormats"><div class="empty-state"><p>No format data yet.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔁 Repeat Viral Signals</div></div>
+          <div id="repeatSignals"><div class="empty-state"><p>No repeat signals detected yet.</p></div></div>
+        </div>
+      </div>
+      <div style="margin-top:18px;text-align:center;">
+        <button class="btn btn-primary" onclick="runValidator()">▶ Find Best Reel</button>
+      </div>
+    </div>
+
+    <!-- ═══════ TAB: WRITER ═══════ -->
+    <div class="tab-content" id="tab-writer">
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">✍ Writing Style Script Writer</div><span class="card-badge badge-orange">Agent 03</span></div>
+          <div class="input-group"><label>Script Topic</label>
+            <input type="text" id="scriptTopic" placeholder="e.g. How to build an AI agent pipeline with Claude Code"></div>
+          <button class="btn btn-primary" onclick="runWriter()" style="margin-bottom:16px;">▶ Write In My Style</button>
+          <div class="card-header" style="margin-top:12px;"><div class="card-title" style="font-size:13px;">Voice Profile</div>
+            <button class="btn btn-ghost btn-sm" onclick="openVoiceModal()">Edit Voice</button></div>
+          <div id="voiceProfile" style="font-size:12px;color:var(--text-secondary);"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📜 Script In Your Style</div></div>
+          <div id="scriptOutput"><div class="empty-state"><div class="icon">✍</div><p>Your script will appear here after generation.</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ TAB: HOOKS ═══════ -->
+    <div class="tab-content" id="tab-hooks">
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><div class="card-title">🪝 Viral Hook Generator</div><span class="card-badge badge-pink">Agent 04</span></div>
+        <div style="display:flex;gap:12px;align-items:end;">
+          <div class="input-group" style="flex:1;margin:0;"><label>Hook Topic</label>
+            <input type="text" id="hookTopic" placeholder="e.g. AI automation with Claude Code"></div>
+          <button class="btn btn-primary" onclick="runHooks()" style="height:40px;">▶ Generate Viral Hooks</button>
+        </div>
+      </div>
+      <div id="hooksOutput"><div class="empty-state"><div class="icon">🪝</div><p>5 hook variations will appear here with confidence scores.</p></div></div>
+    </div>
+
+    <!-- ═══════ TAB: CONSOLE ═══════ -->
+    <div class="tab-content" id="tab-console">
+      <div class="card">
+        <div class="card-header"><div class="card-title">💻 Agent Console</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearConsole()">Clear</button></div>
+        <div class="console" id="consoleLog">
+          <div class="log-line info"><span class="log-time">[system]</span> AI Content Agent System ready. Run the pipeline to begin.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════ SETTINGS MODAL ═══════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>⚙ Settings</h2>
+    <div class="input-group"><label>Apify Token</label>
+      <input type="text" id="settApify" placeholder="Your Apify API token"></div>
+    <div class="input-group"><label>OpenAI API Key</label>
+      <input type="password" id="settOpenAI" placeholder="Your OpenAI API key"></div>
+    <div class="input-group"><label>Instagram Username (Optional for better scraping)</label>
+      <input type="text" id="settIGUser" placeholder="your_username"></div>
+    <div class="input-group"><label>Instagram Password / SessionID</label>
+      <input type="password" id="settIGPass" placeholder="your_password or session_id"></div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Keys and credentials are stored locally in your browser and never sent to any third-party server except their respective APIs.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ VOICE MODAL ═══════ -->
+<div class="modal-overlay" id="voiceModal">
+  <div class="modal">
+    <h2>🎙 Voice Profile</h2>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Paste 20-30 of your past reel scripts below. The AI will analyze your writing style.</p>
+    <div class="input-group"><label>Past Scripts (one per paragraph, separated by blank lines)</label>
+      <textarea id="pastScripts" rows="10" placeholder="Script 1: Bhai dekho yeh game-changer hai...&#10;&#10;Script 2: Aaj main dikhata hoon..."></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeModal('voiceModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="analyzeVoice()">Analyze Voice</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "topic": "mother's day",
+  "hooks": [
+    {
+      "hook": "Aisi honi chahiye AI strategy \u2014 mother's day se sab automate",
+      "pattern": "Aspirational",
+      "confidence": 8,
+      "reasoning": "Aspirational hooks drive saves and shares in the AI niche.",
+      "recommended": false
+    },
+    {
+      "hook": "Thak gaye ho manually sab karte karte? mother's day try karo",
+      "pattern": "Pain Point",
+      "confidence": 7,
+      "reasoning": "Directly addresses viewer frustration \u2014 high comment trigger.",
+      "recommended": false
+    },
+    {
+      "hook": "Log nahi jaante \u2014 mother's day ka yeh hidden feature",
+      "pattern": "Exclusivity",
+      "confidence": 9,
+      "reasoning": "Exclusivity pattern consistently gets 5%+ engagement.",
+      "recommended": true
+    },
+    {
+      "hook": "10 min mein full automation \u2014 sirf mother's day se",
+      "pattern": "Number Claim",
+      "confidence": 8,
+      "reasoning": "Time-based claims get high watch-through rate.",
+      "recommended": false
+    },
+    {
+      "hook": "Kya mother's day really replace kar sakta hai developers ko?",
+      "pattern": "Curiosity Gap",
+      "confidence": 7,
+      "reasoning": "Questions hook the viewer into watching for the answer.",
+      "recommended": false
+    }
+  ],
+  "recommended": {
+    "hook": "Log nahi jaante \u2014 mother's day ka yeh hidden feature",
+    "pattern": "Exclusivity",
+    "confidence": 9,
+    "reasoning": "Exclusivity pattern consistently gets 5%+ engagement.",
+    "recommended": true
+  },
+  "recommendation_reason": "'Log nahi jaante \u2014 mother's day ka yeh hidden feature' uses the Exclusivity pattern, which historically gets the highest engagement in this niche."
+}
